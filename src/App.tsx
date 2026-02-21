@@ -115,7 +115,7 @@ export default function App() {
 
   const [singleName, setSingleName] = useState('')
   const [bulkNames, setBulkNames] = useState('')
-  const [genderToggleDisabledByPersonId, setGenderToggleDisabledByPersonId] = useState<Record<string, boolean>>({})
+  const [genderToggleDisabled, setGenderToggleDisabled] = useState(false)
 
   const [fixedPersonIdDraft, setFixedPersonIdDraft] = useState('')
   const [fixedSeatDraft, setFixedSeatDraft] = useState('')
@@ -242,7 +242,7 @@ export default function App() {
 
   useEffect(() => {
     // プロジェクトを切り替えたら、性別トグルの disable 状態を初期化する。
-    setGenderToggleDisabledByPersonId({})
+    setGenderToggleDisabled(false)
   }, [selectedProjectId])
 
   useEffect(() => {
@@ -479,12 +479,11 @@ export default function App() {
 
   const handleToggleGender = useCallback(
     async (personId: string) => {
-      if (!selectedProject || genderToggleDisabledByPersonId[personId]) {
+      if (!selectedProject || genderToggleDisabled) {
         return
       }
 
       clearMessages()
-      setGenderToggleDisabledByPersonId((current) => ({ ...current, [personId]: true }))
       const nextPersons = selectedProject.persons.map((person) => {
         if (person.id !== personId) {
           return person
@@ -495,7 +494,7 @@ export default function App() {
 
       await saveProject({ ...selectedProject, persons: nextPersons })
     },
-    [clearMessages, genderToggleDisabledByPersonId, saveProject, selectedProject],
+    [clearMessages, genderToggleDisabled, saveProject, selectedProject],
   )
 
   const handleDeletePerson = useCallback(
@@ -938,6 +937,9 @@ export default function App() {
                       <button type="button" onClick={() => void handleUpdateLayout()}>
                         レイアウト更新
                       </button>
+                      <button type="button" onClick={() => setGenderToggleDisabled((current) => !current)}>
+                        男女切替: {genderToggleDisabled ? '無効中' : '有効中'}
+                      </button>
                     </div>
                     <p>席をクリックすると無効席を切り替えます。</p>
                     <div
@@ -1009,7 +1011,7 @@ export default function App() {
                                   person.gender === 'female' ? 'gender-toggle is-female' : 'gender-toggle is-male'
                                 }
                                 onClick={() => void handleToggleGender(person.id)}
-                                disabled={Boolean(genderToggleDisabledByPersonId[person.id])}
+                                disabled={genderToggleDisabled}
                                 aria-label={`${person.name} の性別を切り替え`}
                                 title={`クリックで ${formatGenderLabel(toggleGender(person.gender))} に切り替え`}
                               >
