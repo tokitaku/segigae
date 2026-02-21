@@ -55,6 +55,11 @@ function formatGenderLabel(gender: PersonDTO['gender']): string {
   return gender === 'female' ? '女' : '男'
 }
 
+function formatGenderToggleText(gender: PersonDTO['gender']): string {
+  // 現在値と次の値を並べて、クリックで切り替わることを明示する。
+  return `${formatGenderLabel(gender)}→${formatGenderLabel(toggleGender(gender))}`
+}
+
 function toSeatKey(raw: string): SeatKey | null {
   if (!/^r\d+c\d+$/.test(raw)) {
     return null
@@ -998,8 +1003,9 @@ export default function App() {
                                 }
                                 onClick={() => void handleToggleGender(person.id)}
                                 aria-label={`${person.name} の性別を切り替え`}
+                                title={`クリックで ${formatGenderLabel(toggleGender(person.gender))} に切り替え`}
                               >
-                                {formatGenderLabel(person.gender)}
+                                {formatGenderToggleText(person.gender)}
                               </button>
                               <button
                                 type="button"
