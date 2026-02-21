@@ -115,6 +115,7 @@ export default function App() {
 
   const [singleName, setSingleName] = useState('')
   const [bulkNames, setBulkNames] = useState('')
+  const [genderToggleDisabledByPersonId, setGenderToggleDisabledByPersonId] = useState<Record<string, boolean>>({})
 
   const [fixedPersonIdDraft, setFixedPersonIdDraft] = useState('')
   const [fixedSeatDraft, setFixedSeatDraft] = useState('')
@@ -238,6 +239,11 @@ export default function App() {
     setRowsDraft(selectedProject.layout.rows)
     setColsDraft(selectedProject.layout.cols)
   }, [selectedProject])
+
+  useEffect(() => {
+    // プロジェクトを切り替えたら、性別トグルの disable 状態を初期化する。
+    setGenderToggleDisabledByPersonId({})
+  }, [selectedProjectId])
 
   useEffect(() => {
     if (!selectedAssignment) {
@@ -473,11 +479,12 @@ export default function App() {
 
   const handleToggleGender = useCallback(
     async (personId: string) => {
-      if (!selectedProject) {
+      if (!selectedProject || genderToggleDisabledByPersonId[personId]) {
         return
       }
 
       clearMessages()
+      setGenderToggleDisabledByPersonId((current) => ({ ...current, [personId]: true }))
       const nextPersons = selectedProject.persons.map((person) => {
         if (person.id !== personId) {
           return person
@@ -488,7 +495,7 @@ export default function App() {
 
       await saveProject({ ...selectedProject, persons: nextPersons })
     },
-    [clearMessages, saveProject, selectedProject],
+    [clearMessages, genderToggleDisabledByPersonId, saveProject, selectedProject],
   )
 
   const handleDeletePerson = useCallback(
@@ -1002,6 +1009,7 @@ export default function App() {
                                   person.gender === 'female' ? 'gender-toggle is-female' : 'gender-toggle is-male'
                                 }
                                 onClick={() => void handleToggleGender(person.id)}
+                                disabled={Boolean(genderToggleDisabledByPersonId[person.id])}
                                 aria-label={`${person.name} の性別を切り替え`}
                                 title={`クリックで ${formatGenderLabel(toggleGender(person.gender))} に切り替え`}
                               >
